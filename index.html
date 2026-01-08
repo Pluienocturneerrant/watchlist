@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filmy do obejrzenia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Georgia, serif;
+            background: #111827;
+            color: white;
+            padding: 1rem;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .sync-info {
+            background: #1e40af;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .sync-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .sync-btn {
+            padding: 0.5rem 1rem;
+            background: #2563eb;
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            cursor: pointer;
+            font-family: Georgia, serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .sync-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .sync-btn.danger {
+            background: #dc2626;
+            font-size: 0.75rem;
+            padding: 0.4rem 0.75rem;
+        }
+
+        .sync-btn.danger:hover {
+            background: #b91c1c;
+        }
+        
+        .stats {
+            background: #1f2937;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+        
+        .blue { color: #60a5fa; }
+        .green { color: #4ade80; }
+        .yellow { color: #fbbf24; }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            background: #1f2937;
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            font-size: 1rem;
+            font-family: Georgia, serif;
+        }
+        
+        .search-box input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .search-box input:focus {
+            outline: 2px solid #3b82f6;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            background: #2563eb;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .film-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .film-item {
+            background: #1f2937;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        
+        .film-item.empty {
+            border: 2px dashed #4b5563;
+        }
+        
+        .film-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .film-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .film-number {
+            width: 3rem;
+            height: 3rem;
+            background: #374151;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            flex-shrink: 0;
+            color: #9ca3af;
+        }
+        
+        .film-title-container {
+            flex-grow: 1;
+            min-width: 0;
+        }
+        
+        .film-title {
+            font-size: 1.125rem;
+            padding: 0.5rem;
+            margin: -0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            word-wrap: break-word;
+        }
+        
+        .film-title:hover {
+            background: #374151;
+        }
+        
+        .film-title.empty {
+            color: #6b7280;
+            font-style: italic;
+        }
+        
+        .film-edit input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background: #374151;
+            border: none;
+            border-radius: 0.25rem;
+            color: white;
+            font-size: 1rem;
+            font-family: Georgia, serif;
+            margin-bottom: 0.5rem;
+        }
+        
+        .film-edit input:focus {
+            outline: 2px solid #3b82f6;
+        }
+        
+        .film-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            font-family: Georgia, serif;
+        }
+        
+        .btn-save {
+            background: #16a34a;
+            color: white;
+        }
+        
+        .btn-save:hover {
+            background: #15803d;
+        }
+        
+        .btn-cancel {
+            background: #4b5563;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background: #374151;
+        }
+
+        .film-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            padding-left: 3.75rem;
+        }
+        
+        .btn-delete {
+            flex-shrink: 0;
+            padding: 0.5rem 0.75rem;
+            background: #374151;
+            border: none;
+            color: #f87171;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+        }
+        
+        .btn-delete:hover {
+            background: #4b5563;
+            color: #fca5a5;
+        }
+        
+        .success-message, .error-message {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            background: #16a34a;
+            color: white;
+        }
+        
+        .error-message {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .no-results {
+            text-align: center;
+            color: #9ca3af;
+            padding: 3rem 0;
+        }
+        
+        .loading {
+            text-align: center;
+            font-size: 1.25rem;
+            padding: 3rem 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1f2937;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal textarea {
+            width: 100%;
+            height: 200px;
+            background: #374151;
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            padding: 0.75rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        @media (min-width: 640px) {
+            body {
+                padding: 1.5rem;
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+            .stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Filmy do obejrzenia</h1>
+
+        <div class="sync-info">
+            💾 Dane zapisują się automatycznie w przeglądarce. Użyj eksportu/importu do synchronizacji między urządzeniami.
+        </div>
+
+        <div class="sync-buttons">
+            <button class="sync-btn" onclick="sendEmail()">📧 Wyślij emailem</button>
+            <button class="sync-btn" onclick="copyToClipboard()">📋 Skopiuj dane</button>
+            <button class="sync-btn" onclick="exportData()">📤 Pobierz plik</button>
+            <button class="sync-btn" onclick="showImportModal()">📥 Importuj dane</button>
+            <button class="sync-btn danger" onclick="resetData()" style="margin-left: auto;">⚠️ Reset</button>
+        </div>
+        
+        <div id="success" class="success-message" style="display: none;"></div>
+        <div id="error" class="error-message" style="display: none;"></div>
+        
+        <div class="stats">
+            <div>
+                <div class="stat-value blue" id="mateusz-count">0</div>
+                <div class="stat-label">Pokój Mateusza</div>
+            </div>
+            <div>
+                <div class="stat-value green" id="sypialnia-count">0</div>
+                <div class="stat-label">Sypialnia</div>
+            </div>
+            <div>
+                <div class="stat-value yellow" id="empty-count">0</div>
+                <div class="stat-label">Pustych pól</div>
+            </div>
+        </div>
+        
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search" placeholder="Szukaj filmu...">
+        </div>
+        
+        <div id="loading" class="loading">Ładowanie...</div>
+        <div id="content" style="display: none;">
+            <div class="section">
+                <div class="section-header">🎬 Pokój Mateusza</div>
+                <div id="mateusz-list" class="film-list"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">🛏️ Sypialnia</div>
+                <div id="sypialnia-list" class="film-list"></div>
+            </div>
+        </div>
+        <div id="no-results" class="no-results" style="display: none;">
+            Nie znaleziono filmów pasujących do wyszukiwania
+        </div>
+    </div>
+
+    <!-- Modal importu -->
+    <div id="import-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">Importuj dane</div>
+            <textarea id="import-textarea" placeholder="Wklej tutaj wyeksportowane dane..."></textarea>
+            <div class="modal-buttons">
+                <button class="btn btn-save" onclick="importData()">Importuj</button>
+                <button class="btn btn-cancel" onclick="hideImportModal()">Anuluj</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'watchlist-data-v1';
+
+        const initialData = {
+            mateusz: [
+                "Jerry Maguire", "Boudica", "Niezłomni", "Herkules", "Lod nad",
+                "Bardotka", "Ciotka Hitlera", "Pokój", "Exodus", "Porwany",
+                "Świnia", "Carne stokrotki", "Rzeka tajemnic", "Blisko", "Tożsamość strachu",
+                "Umysł w ogniu", "Pieniądze i krew", "Agora", "Miasto szpiegów", "Mistrz",
+                "Delegacja", "Sound of freedom", "Ali Ava", "Wywiad z wampirem", "Zielona granica",
+                "Płomienie nadziei", "Mniejsze zło", "Królewskie polowanie na słońce",
+                ...Array(22).fill("")
+            ],
+            sypialnia: [
+                "Pół żartem", "Partner", "Wyjscie awaryjne",
+                ...Array(47).fill("")
+            ]
+        };
+
+        let films = { mateusz: [], sypialnia: [] };
+        let editingId = null;
+        let editingSection = null;
+        let searchTerm = '';
+
+        function loadData() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    films = JSON.parse(saved);
+                } else {
+                    films = JSON.parse(JSON.stringify(initialData));
+                    saveToStorage();
+                }
+            } catch (err) {
+                console.error('Error loading data:', err);
+                films = JSON.parse(JSON.stringify(initialData));
+            }
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+            render();
+        }
+
+        function saveToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(films));
+            } catch (err) {
+                showError('Błąd zapisu: ' + err.message);
+            }
+        }
+
+        function showSuccess(message) {
+            const el = document.getElementById('success');
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => {
+                el.style.display = 'none';
+            }, 3000);
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 3000);
+        }
+
+        function updateStats() {
+            const mateuszFilled = films.mateusz.filter(f => f && f.trim()).length;
+            const sypialniаFilled = films.sypialnia.filter(f => f && f.trim()).length;
+            const totalEmpty = (films.mateusz.length - mateuszFilled) + (films.sypialnia.length - sypialniаFilled);
+            
+            document.getElementById('mateusz-count').textContent = mateuszFilled;
+            document.getElementById('sypialnia-count').textContent = sypialniаFilled;
+            document.getElementById('empty-count').textContent = totalEmpty;
+        }
+
+        function getFilteredFilms(section) {
+            return films[section].map((title, idx) => ({ idx, title }))
+                .filter(item => {
+                    if (!searchTerm) return true;
+                    return item.title.toLowerCase().includes(searchTerm.toLowerCase());
+                });
+        }
+
+        function render() {
+            updateStats();
+            
+            const mateuszFiltered = getFilteredFilms('mateusz');
+            const sypialniaFiltered = getFilteredFilms('sypialnia');
+            
+            const hasResults = mateuszFiltered.length > 0 || sypialniaFiltered.length > 0;
+            
+            document.getElementById('content').style.display = hasResults ? 'block' : 'none';
+            document.getElementById('no-results').style.display = hasResults ? 'none' : 'block';
+
+            renderSection('mateusz', mateuszFiltered);
+            renderSection('sypialnia', sypialniaFiltered);
+        }
+
+        function renderSection(section, filtered) {
+            const listEl = document.getElementById(`${section}-list`);
+            
+            if (filtered.length === 0) {
+                listEl.innerHTML = '<div class="no-results" style="padding: 2rem 0;">Brak filmów w tej sekcji</div>';
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(({ idx, title }) => {
+                const isEmpty = !title || title.trim() === '';
+                const isEditing = editingId === idx && editingSection === section;
+
+                if (isEditing) {
+                    return `
+                        <div class="film-item ${isEmpty ? 'empty' : ''}">
+                            <div class="film-content">
+                                <div class="film-row">
+                                    <div class="film-number">${idx + 1}</div>
+                                    <div class="film-title-container">
+                                        <div class="film-edit">
+                                            <input type="text" id="edit-input-${section}-${idx}" value="${title}" placeholder="Wpisz tytuł filmu...">
+                                            <div class="film-buttons">
+                                                <button class="btn btn-save" onclick="saveEdit('${section}', ${idx})">Zapisz</button>
+                                                <button class="btn btn-cancel" onclick="cancelEdit()">Anuluj</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="film-item ${isEmpty ? 'empty' : ''}">
+                        <div class="film-content">
+                            <div class="film-row">
+                                <div class="film-number">${idx + 1}</div>
+                                <div class="film-title-container">
+                                    <div class="film-title ${isEmpty ? 'empty' : ''}" onclick="startEdit('${section}', ${idx})">
+                                        ${isEmpty ? 'Kliknij aby dodać tytuł...' : title}
+                                    </div>
+                                </div>
+                            </div>
+                            ${!isEmpty ? `
+                                <div class="film-actions">
+                                    <button class="btn-delete" onclick="deleteFilm('${section}', ${idx})">🗑️ Usuń</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (isEditing && editingSection === section) {
+                const input = document.getElementById(`edit-input-${section}-${editingId}`);
+                if (input) input.focus();
+            }
+        }
+
+        function startEdit(section, idx) {
+            editingId = idx;
+            editingSection = section;
+            render();
+        }
+
+        function cancelEdit() {
+            editingId = null;
+            editingSection = null;
+            render();
+        }
+
+        function saveEdit(section, idx) {
+            const input = document.getElementById(`edit-input-${section}-${idx}`);
+            if (input) {
+                films[section][idx] = input.value.trim();
+                saveToStorage();
+                showSuccess('Zapisano!');
+            }
+            editingId = null;
+            editingSection = null;
+            render();
+        }
+
+        function deleteFilm(section, idx) {
+            if (confirm('Czy na pewno usunąć ten film?')) {
+                films[section][idx] = '';
+                saveToStorage();
+                showSuccess('Usunięto!');
+                render();
+            }
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(films);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'filmy-do-obejrzenia-' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showSuccess('Plik pobrany!');
+        }
+
+        function sendEmail() {
+            const dataStr = JSON.stringify(films);
+            const subject = encodeURIComponent('Filmy do obejrzenia - synchronizacja');
+            const body = encodeURIComponent(dataStr);
+            const mailtoLink = `mailto:vihmasajuoorander@gmail.com?subject=${subject}&body=${body}`;
+            window.location.href = mailtoLink;
+            showSuccess('Otwieranie klienta email...');
+        }
+
+        function copyToClipboard() {
+            const dataStr = JSON.stringify(films);
+            navigator.clipboard.writeText(dataStr).then(() => {
+                showSuccess('Dane skopiowane do schowka! (' + dataStr.length + ' znaków)');
+            }).catch(err => {
+                showError('Błąd kopiowania: ' + err.message);
+            });
+        }
+
+        function showImportModal() {
+            document.getElementById('import-modal').classList.add('active');
+        }
+
+        function hideImportModal() {
+            document.getElementById('import-modal').classList.remove('active');
+            document.getElementById('import-textarea').value = '';
+        }
+
+        function importData() {
+            const data = document.getElementById('import-textarea').value.trim();
+            
+            if (!data) {
+                showError('Pole importu jest puste. Wklej dane przed importem.');
+                return;
+            }
+            
+            try {
+                const parsed = JSON.parse(data);
+                
+                if (typeof parsed !== 'object' || parsed === null) {
+                    throw new Error('Nieprawidłowa struktura danych');
+                }
+                
+                films = parsed;
+                saveToStorage();
+                hideImportModal();
+                render();
+                showSuccess('Dane zaimportowane pomyślnie!');
+            } catch (err) {
+                console.error('Import error:', err);
+                showError('Błąd importu: nieprawidłowy format danych. Upewnij się, że skopiowałeś pełne dane z emaila.');
+            }
+        }
+
+        function resetData() {
+            if (confirm('⚠️ UWAGA! Czy na pewno zresetować bazę do stanu początkowego?\n\nWszystkie Twoje zmiany zostaną bezpowrotnie utracone!\n\nJeśli chcesz zachować dane, najpierw je wyeksportuj.')) {
+                films = JSON.parse(JSON.stringify(initialData));
+                saveToStorage();
+                render();
+                showSuccess('Baza zresetowana do stanu początkowego');
+            }
+        }
+
+        document.getElementById('search').addEventListener('input', (e) => {
+            searchTerm = e.target.value;
+            render();
+        });
+
+        loadData();
+    </script>
+</body>
+</html>
