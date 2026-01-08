@@ -507,11 +507,11 @@
 
         function updateStats() {
             const mateuszFilled = films.mateusz.filter(f => f && f.trim()).length;
-            const sypialniаFilled = films.sypialnia.filter(f => f && f.trim()).length;
-            const totalEmpty = (films.mateusz.length - mateuszFilled) + (films.sypialnia.length - sypialniаFilled);
+            const sypialniaFilled = films.sypialnia.filter(f => f && f.trim()).length;
+            const totalEmpty = (films.mateusz.length - mateuszFilled) + (films.sypialnia.length - sypialniaFilled);
             
             document.getElementById('mateusz-count').textContent = mateuszFilled;
-            document.getElementById('sypialnia-count').textContent = sypialniаFilled;
+            document.getElementById('sypialnia-count').textContent = sypialniaFilled;
             document.getElementById('empty-count').textContent = totalEmpty;
         }
 
@@ -526,31 +526,40 @@
         function render() {
             updateStats();
             
-            const mateuszFiltered = getFilteredFilms('mateusz');
-            const sypialniaFiltered = getFilteredFilms('sypialnia');
-            
-            const hasResults = mateuszFiltered.length > 0 || sypialniaFiltered.length > 0;
-            
-            document.getElementById('content').style.display = hasResults ? 'block' : 'none';
-            document.getElementById('no-results').style.display = hasResults ? 'none' : 'block';
+            if (!searchTerm) {
+                // Bez wyszukiwania - pokaż wszystkie sekcje
+                document.getElementById('content').style.display = 'block';
+                document.getElementById('no-results').style.display = 'none';
+                renderSection('mateusz', films.mateusz.map((title, idx) => ({ idx, title })));
+                renderSection('sypialnia', films.sypialnia.map((title, idx) => ({ idx, title })));
+            } else {
+                // Z wyszukiwaniem - filtruj
+                const mateuszFiltered = getFilteredFilms('mateusz');
+                const sypialniaFiltered = getFilteredFilms('sypialnia');
+                
+                const hasResults = mateuszFiltered.length > 0 || sypialniaFiltered.length > 0;
+                
+                document.getElementById('content').style.display = hasResults ? 'block' : 'none';
+                document.getElementById('no-results').style.display = hasResults ? 'none' : 'block';
 
-            renderSection('mateusz', mateuszFiltered);
-            renderSection('sypialnia', sypialniaFiltered);
+                renderSection('mateusz', mateuszFiltered);
+                renderSection('sypialnia', sypialniaFiltered);
+            }
         }
 
-        function renderSection(section, filtered) {
+        function renderSection(section, itemsToShow) {
             const listEl = document.getElementById(`${section}-list`);
             
-            if (filtered.length === 0) {
-                listEl.innerHTML = '<div class="no-results" style="padding: 2rem 0;">Brak filmów w tej sekcji</div>';
+            if (!itemsToShow || itemsToShow.length === 0) {
+                listEl.innerHTML = '<div class="no-results" style="padding: 2rem 0;">Brak filmów pasujących do wyszukiwania</div>';
                 return;
             }
 
-            listEl.innerHTML = filtered.map(({ idx, title }) => {
+            listEl.innerHTML = itemsToShow.map(({ idx, title }) => {
                 const isEmpty = !title || title.trim() === '';
-                const isEditing = editingId === idx && editingSection === section;
+                const isCurrentlyEditing = editingId === idx && editingSection === section;
 
-                if (isEditing) {
+                if (isCurrentlyEditing) {
                     return `
                         <div class="film-item ${isEmpty ? 'empty' : ''}">
                             <div class="film-content">
@@ -592,7 +601,7 @@
                 `;
             }).join('');
 
-            if (isEditing && editingSection === section) {
+            if (editingId !== null && editingSection === section) {
                 const input = document.getElementById(`edit-input-${section}-${editingId}`);
                 if (input) input.focus();
             }
